@@ -1,2 +1,2 @@
-# uva-dl-tutorials
-UvA's Deep Learning Tutorials (using a R &amp; Python)
+# UvA's Deep Learning Tutorials 
+Using R and Python (reticulate, yay) to run the tutorials hosted here: https://uvadlc-notebooks.readthedocs.io/en/latest/index.html
