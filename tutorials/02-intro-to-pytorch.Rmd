@@ -6,9 +6,10 @@ output:
 
 Starting with the basics in this notebook based on UvA's [Tutorial 2](https://uvadlc-notebooks.readthedocs.io/en/latest/tutorial_notebooks/tutorial2/Introduction_to_PyTorch.html)
 
-```{r setup}
-library(reticulate)
+```{r setup, include = FALSE}
 library(here)
+library(reticulate)
+library(dplyr)
 ```
 
 Here's my python configuration for this project.
@@ -36,6 +37,13 @@ from tqdm.notebook import tqdm
 ```
 
 All imported with no issues. Very nice. Thanks, conda. \<3
+
+*8-6-2023 bug encountered with this notebook*\
+Every time I tried to run the above chunk to import some python packages, I noticed that `reticulate::repl_python()` would run followed immediately by `exit` and then whatever I had in the setup chunk would be executed. My R Session would then be frozen. Sometimes my session would crash. In other words, I could not run any python chunks. I removed and re-installed {reticulate} and {Rcpp} but this didn't change anything. I unchecked the option to run the setup chunk automatically in my Global Options, and voila - I could then run python chunks. No idea what the issue or bug is related to having the setup chunk prioritized within a python chunk run. Here's my current session info for reference.
+
+```{r}
+sessionInfo()
+```
 
 # The Basics of PyTorch
 
@@ -154,4 +162,135 @@ Other operations covered in the tutorial are for matrix multiplication.
 
 -   `torch.einsum` - Performs matrix multiplications and more (i.e. sums of products) using the Einstein summation convention.
 
-Shneat. I gotta try some of these batch mm examples to make sense of that.
+Shneat. Some examples to demonstrate the different ways of multiplying stuff.
+
+```{python}
+x = torch.arange(6)
+
+x = x.view(2, 3)
+print(x)
+```
+
+Stacking operations
+
+```{python}
+w = torch.arange(12).view(3, 4)
+print(w)
+```
+
+```{python}
+x.matmul(w)
+x.mm(w)
+```
+
+How about a broadcasting example.
+
+```{python}
+x = torch.arange(12).view(2, 3, 2)
+w = torch.arange(4).view(1, 2, 2)
+
+z = x.matmul(w)
+z.size()
+print(z)
+```
+
+```{python}
+x = torch.arange(8).view(2, 2, 2)
+w = torch.arange(12).view(2, 2, 3)
+
+print("x matmul w:\n", x.matmul(w))
+print("x bmm w:\n", x.bmm(w))
+```
+
+# Indexing
+
+We can index on columns or rows of a tensor by using \\[ similar to as indexing a `data.frame` in R.
+
+```{python}
+x = torch.arange(12).view(3, 4)
+print("X", x)
+```
+
+Speaking of R, what kind of class does R see a PyTorch tensor as?
+
+```{r}
+class(py$x)
+```
+
+Cool. Within the R chunk we can index for the rows of the tensor, but not any of the columns (any indexing with a comma results in an error for the object).
+
+I'll construct a matrix in R with the same shape and values as the `x` tensor in python.
+
+```{r}
+x_as_matrix <- 
+  matrix(0:11, nrow = 4, ncol = 3) %>% 
+  t()
+
+x_as_matrix
+```
+
+Note that indexing in python starts at zero for the first column or row. If you use a `:n` to list multiple indices it only returns up to the `n-1` index.
+
+```{python}
+x[0, 0:2] # first row, first two columns
+x[0:2, :] # first two rows, all columns
+```
+
+To obtain the equivalent parts by indexing the `x` matrix in R we would do.
+
+```{r}
+x_as_matrix[1, 1:2]
+x_as_matrix[1:2, ]
+```
+
+# Dynamic Computation Graph and Backpropagation
+
+Getting gradients and derivatives of functions we define is where its at in PyTorch.
+
+Weight matrices transform an input `x` tensor usually via multiplication and bias vectors usually via addition. A `computational graph` is generated as we stack on transformations to the input. PyTorch will track the manipulations along the way in a `dynamic computation graph`. I wonder if there must be a way to call/view that?
+
+We'll look at an example of how this graph is created for the following function
+
+$$
+y =  \frac{1}{x}\Sigma_{i}[(x_i + 2)^2 + 3]
+$$
+
+By default tensors created do not require gradients, so this must be specified if needed/desired for the tensor. The input tensor can be thought of as the parameters.
+
+```{python}
+x = torch.arange(
+  3, 
+  dtype = torch.float32, 
+  requires_grad = True
+)
+
+print(x.requires_grad)
+```
+
+To optimize $y$ we'll use its gradients. First we'll build y stepwise.
+
+```{python}
+a = x + 2
+b = a**2
+c = b + 3 
+y = c.mean()
+print("Y", y)
+```
+Note how the $y$ has the `grad_fn` defined. 
+So the computation graph for $y$ goes backwards from y to x. Here's the figure from the tutorial.
+
+![](y_comp_graph.PNG)
+
+In order to perform backpropagation on the computation graph, we use the `backward()` function on the last output. This will calculate the gradients for each tensor that has the `requires_grad=True` property.
+
+```{python}
+y.backward()
+```
+
+Executing the above means that now `x.grad` exists. 
+
+```{python}
+x.grad
+```
+
+These are the gradients of $x$. 
