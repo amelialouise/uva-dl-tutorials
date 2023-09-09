@@ -1,0 +1,33 @@
+---
+output:
+  md_document:
+    variant: markdown_github
+---
+
+Continuing with UvA's [Tutorial 2](https://uvadlc-notebooks.readthedocs.io/en/latest/tutorial_notebooks/tutorial2/Introduction_to_PyTorch.html). 
+
+```{r setup, include = FALSE}
+library(here)
+library(reticulate)
+library(dplyr)
+```
+
+```{python}
+import os
+import math
+import numpy as np
+import time
+
+## Imports for plotting
+import matplotlib.pyplot as plt
+from matplotlib.colors import to_rgba
+import seaborn as sns
+sns.set()
+
+## Progress bar
+from tqdm.notebook import tqdm
+```
+
+
+# GPU Support
+
