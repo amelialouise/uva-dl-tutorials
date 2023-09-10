@@ -74,7 +74,7 @@ end_time = time.time()
 print(f"CPU time: {(end_time - start_time):6.5f}s")
 ```
 
-    ## CPU time: 0.59042s
+    ## CPU time: 0.42782s
 
 ``` python
 ## GPU version
@@ -90,7 +90,7 @@ torch.cuda.synchronize() # waits for all to finish running on GPU
 print(f"GPU time: {0.001 * start.elapsed_time(end):6.5f}s")
 ```
 
-    ## GPU time: 0.05930s
+    ## GPU time: 0.05929s
 
 My GPU is about 5x faster. The difference in the tutorial was much more
 dramatic (orders of magnitude):
@@ -317,7 +317,7 @@ print("Size of dataset:", len(dataset))
 print("First element:", dataset[0])
 ```
 
-    ## First element: (tensor([1.0481, 1.0606]), tensor(0))
+    ## First element: (tensor([ 1.1391, -0.0653]), tensor(1))
 
 Nice. So we have a tensor of size \[200,2\] that we can use.
 
@@ -378,6 +378,8 @@ py$dataset$data$numpy() %>%
   )
 ```
 
+    ## Warning: Removed 1 rows containing missing values (`geom_point()`).
+
 ![](02-example_files/figure-markdown_github/unnamed-chunk-17-1.png)
 Beautiful.
 
@@ -435,34 +437,49 @@ print("Data inputs", data_inputs.shape, "\n", data_inputs)
 ```
 
     ## Data inputs torch.Size([8, 2]) 
-    ##  tensor([[ 0.0442,  0.8639],
-    ##         [ 1.1354,  1.0633],
-    ##         [ 0.9464,  0.0407],
-    ##         [ 0.0844,  0.0109],
-    ##         [ 0.1096,  0.0697],
-    ##         [ 0.9260, -0.1086],
-    ##         [ 1.0481,  1.0606],
-    ##         [ 0.9716,  0.9669]])
+    ##  tensor([[ 1.0217,  1.0857],
+    ##         [-0.0711, -0.0207],
+    ##         [ 1.0261, -0.0934],
+    ##         [ 0.0490,  1.0261],
+    ##         [ 0.0405, -0.0756],
+    ##         [-0.0712,  1.0300],
+    ##         [ 0.0954,  1.1284],
+    ##         [-0.1150,  0.0467]])
 
 ``` python
 print("Data labels", data_labels.shape, "\n", data_labels)
 ```
 
     ## Data labels torch.Size([8]) 
-    ##  tensor([1, 0, 1, 0, 0, 1, 0, 0])
+    ##  tensor([0, 0, 1, 1, 0, 1, 1, 0])
 
 Cool.
 
-## Optimization
+# Optimization
 
 We’ve got the model and the dataset, so now we’ll “prepare the
-optimization of the model”. This involves calculating the loss by using
-our batches. For binary classification, we can use Binary Cross Entropy
+optimization of the model”.
+
+> During training, we will perform the following steps: 1. Get a batch
+> from the data loader  
+> 2. Obtain the predictions from the model for the batch  
+> 3. Calculate the loss based on the difference between predictions and
+> labels  
+> 4. Backpropagation: calculate the gradients for every parameter with
+> respect to the loss  
+> 5. Update the parameters of the model in the direction of the
+> gradients  
+
+## Loss modules
+
+We will be calculating the loss for a batch by using predefined loss
+functions. For binary classification, we can use Binary Cross Entropy
 (BCE) which is defined as
 
 ℒ<sub>*B**C**E*</sub> =  − *Σ*<sub>*i*</sub>\[*y*<sub>*i*</sub>log(*x*<sub>*i*</sub>)+(1−*y*<sub>*i*</sub>)log(1−*x*<sub>*i*</sub>)\]
 
 where *y* are the labels and *x* are predictions. Both between \[0,1\].
+
 The full list of 20+ predefined loss functions pytorch has available is
 [here](https://pytorch.org/docs/stable/nn.html#loss-functions). There
 are two available for BCE,
@@ -544,7 +561,12 @@ model.to(device)
     ##   (linear2): Linear(in_features=4, out_features=1, bias=True)
     ## )
 
-Next we set our model to training mode. To be continued…
+And now we’ll train the model.
+
+> There exist certain modules that need to perform a different forward
+> step during training than during testing (e.g. BatchNorm and Dropout),
+> and we can switch between them using `model.train()` and
+> `model.eval()`.
 
 ``` python
 def train_model(model, optimizer, data_loader, loss_module, num_epochs=100):
@@ -576,3 +598,267 @@ def train_model(model, optimizer, data_loader, loss_module, num_epochs=100):
             ## Step 5: Update the parameters
             optimizer.step()
 ```
+
+Here we go…
+
+``` python
+train_model(model, optimizer, train_data_loader, loss_module)
+```
+
+    ##   0%|          | 0/100 [00:00<?, ?it/s]
+
+It looks ready, I think? We’ll find out.
+
+## Saving a model
+
+All the learnable parameters from the model can be extractd by using
+`state_dict`.
+
+``` python
+state_dict = model.state_dict()
+print(state_dict)
+```
+
+    ## OrderedDict([('linear1.weight', tensor([[-2.2271,  3.1316],
+    ##         [ 3.2716, -2.4344],
+    ##         [-2.3553, -2.3066],
+    ##         [-0.5073, -0.9231]], device='cuda:0')), ('linear1.bias', tensor([0.8535, 0.9872, 0.5480, 1.0785], device='cuda:0')), ('linear2.weight', tensor([[-4.0489, -4.3152, -3.5065,  1.4636]], device='cuda:0')), ('linear2.bias', tensor([0.9264], device='cuda:0'))])
+
+Nice, this looks good. We’ll save this so that we can load these same
+weights when needed later.
+
+``` python
+torch.save(state_dict, "our_model.tar")
+```
+
+Then to load it, we’ll use `torch.load`, and the module function
+`load_state_dict` to overwrite our parameters with the new values.
+
+``` python
+# Load state dict from the disk
+state_dict = torch.load("our_model.tar")
+
+# Create a new model and load the state
+new_model = SimpleClassifier(
+  num_inputs = 2, 
+  num_hidden = 4, 
+  num_outputs = 1
+)
+new_model.load_state_dict(state_dict)
+```
+
+    ## <All keys matched successfully>
+
+``` python
+# Check that the parameters are the same in both
+print("Original model\n", model.state_dict())
+```
+
+    ## Original model
+    ##  OrderedDict([('linear1.weight', tensor([[-2.2271,  3.1316],
+    ##         [ 3.2716, -2.4344],
+    ##         [-2.3553, -2.3066],
+    ##         [-0.5073, -0.9231]], device='cuda:0')), ('linear1.bias', tensor([0.8535, 0.9872, 0.5480, 1.0785], device='cuda:0')), ('linear2.weight', tensor([[-4.0489, -4.3152, -3.5065,  1.4636]], device='cuda:0')), ('linear2.bias', tensor([0.9264], device='cuda:0'))])
+
+``` python
+print("\nLoaded model\n", new_model.state_dict())
+```
+
+    ## 
+    ## Loaded model
+    ##  OrderedDict([('linear1.weight', tensor([[-2.2271,  3.1316],
+    ##         [ 3.2716, -2.4344],
+    ##         [-2.3553, -2.3066],
+    ##         [-0.5073, -0.9231]])), ('linear1.bias', tensor([0.8535, 0.9872, 0.5480, 1.0785])), ('linear2.weight', tensor([[-4.0489, -4.3152, -3.5065,  1.4636]])), ('linear2.bias', tensor([0.9264]))])
+
+Neat. Apparently when we load the state dict we also get back this nice
+*All keys matched successfully* message in the console.
+
+# Evaluation
+
+The model is trained, now we can evaluate it on a test set. We’ll create
+this test dataset using our XOR dataset class.
+
+``` python
+test_dataset = XORDataset(size = 500)
+
+#drop_last means don't drop the last batch although it's smaller than 128
+test_data_loader = data.DataLoader(
+  test_dataset, 
+  batch_size = 128, 
+  shuffle = False, 
+  drop_last = False
+) 
+```
+
+And onward to our evaluation function. We’ll use accuracy as our metric,
+i.e. # correct / \# predictions.
+
+Since we don’t need to calculate the gradients for evaluation, we can
+deactivate this to speed up the model and reduce the required memory by
+using `with torch.no_grad():...`.
+
+``` python
+def eval_model(model, data_loader):
+    model.eval() # Set model to eval mode
+    true_preds, num_preds = 0., 0.
+
+    with torch.no_grad(): # Deactivate gradients for the following code
+        for data_inputs, data_labels in data_loader:
+
+            # Determine prediction of model on dev set
+            data_inputs, data_labels = data_inputs.to(device), data_labels.to(device)
+            preds = model(data_inputs)
+            preds = preds.squeeze(dim=1)
+            preds = torch.sigmoid(preds) # Sigmoid to map predictions between 0 and 1
+            pred_labels = (preds >= 0.5).long() # Binarize predictions to 0 and 1
+
+            # Keep records of predictions for the accuracy metric (true_preds=TP+TN, num_preds=TP+TN+FP+FN)
+            true_preds += (pred_labels == data_labels).sum()
+            num_preds += data_labels.shape[0]
+
+    acc = true_preds / num_preds
+    print(f"Accuracy of the model: {100.0*acc:4.2f}%")
+```
+
+``` python
+eval_model(model, test_data_loader)
+```
+
+    ## Accuracy of the model: 100.00%
+
+> If we trained our model correctly, we should see a score close to 100%
+> accuracy. However, this is only possible because of our simple task,
+> and unfortunately, we usually don’t get such high scores on test sets
+> of more complex tasks.
+
+What if we try this again with different batch sizes for the test data?
+
+``` python
+test_dataset2 = XORDataset(size = 98*1000)
+test_data_loader2 = data.DataLoader(
+  test_dataset, 
+  batch_size = 89, 
+  shuffle = True, 
+  drop_last = False
+) 
+
+eval_model(model, test_data_loader2)
+```
+
+    ## Accuracy of the model: 100.00%
+
+I noticed that smaller batch sizes take slightly more time to complete
+if we have a larger dataset, but otherwise no change in the accuracy.
+
+# Visualizing classification boundaries
+
+We can see where the model has created decision boundaries by getting
+out predictions for every data point in a range of \[-0.5, 1.5\]. Here’s
+the code.
+
+``` python
+@torch.no_grad() # Decorator, same effect as "with torch.no_grad(): ..." over the whole function.
+def visualize_classification(model, data, label):
+    if isinstance(data, torch.Tensor):
+        data = data.cpu().numpy()
+    if isinstance(label, torch.Tensor):
+        label = label.cpu().numpy()
+    data_0 = data[label == 0]
+    data_1 = data[label == 1]
+
+    fig = plt.figure(figsize=(4,4), dpi=500)
+    plt.scatter(data_0[:,0], data_0[:,1], edgecolor="#333", label="Class 0")
+    plt.scatter(data_1[:,0], data_1[:,1], edgecolor="#333", label="Class 1")
+    plt.title("Dataset samples")
+    plt.ylabel(r"$x_2$")
+    plt.xlabel(r"$x_1$")
+    plt.legend()
+
+    # Let's make use of a lot of operations we have learned above
+    model.to(device)
+    c0 = torch.Tensor(to_rgba("C0")).to(device)
+    c1 = torch.Tensor(to_rgba("C1")).to(device)
+    x1 = torch.arange(-0.5, 1.5, step=0.01, device=device)
+    x2 = torch.arange(-0.5, 1.5, step=0.01, device=device)
+    xx1, xx2 = torch.meshgrid(x1, x2, indexing='ij')  # Meshgrid function as in numpy
+    model_inputs = torch.stack([xx1, xx2], dim=-1)
+    preds = model(model_inputs)
+    preds = torch.sigmoid(preds)
+    output_image = (1 - preds) * c0[None,None] + preds * c1[None,None]  # Specifying "None" in a dimension creates a new one
+    output_image = output_image.cpu().numpy()  # Convert to numpy array. This only works for tensors on CPU, hence first push to CPU
+    plt.imshow(output_image, origin='lower', extent=(-0.5, 1.5, -0.5, 1.5))
+    plt.grid(False)
+    return fig
+
+_ = visualize_classification(model, dataset.data, dataset.label)
+plt.show()
+```
+
+<img src="02-example_files/figure-markdown_github/unnamed-chunk-34-1.png" width="384" />
+
+Oooh, pretty. The blurry areas are where the model has more uncertainty.
+
+# Changing the hidden layers
+
+## One neuron
+
+How about we alter the number of neurons?
+
+``` python
+model2 = SimpleClassifier(
+  num_inputs = 2, 
+  num_hidden = 1, 
+  num_outputs = 1
+)
+# push model to GPU
+model2.to(device)
+
+# get new optimizer
+optimizer = torch.optim.SGD(model2.parameters(), lr = 0.1)
+
+# train model
+train_model(model2, optimizer, train_data_loader, loss_module)
+
+# evaluate
+eval_model(model2, test_data_loader)
+```
+
+<img src="02-example_files/figure-markdown_github/unnamed-chunk-35-3.png" width="384" />
+
+``` python
+visualize_classification(model2, dataset.data, dataset.label)
+plt.show()
+```
+
+<img src="02-example_files/figure-markdown_github/unnamed-chunk-36-5.png" width="384" />
+
+## Two neurons
+
+``` python
+model2 = SimpleClassifier(
+  num_inputs = 2, 
+  num_hidden = 2, 
+  num_outputs = 1
+)
+# push model to GPU
+model2.to(device)
+
+# get new optimizer
+optimizer = torch.optim.SGD(model2.parameters(), lr = 0.1)
+
+# train model
+train_model(model2, optimizer, train_data_loader, loss_module)
+
+# evaluate
+eval_model(model2, test_data_loader)
+```
+
+<img src="02-example_files/figure-markdown_github/unnamed-chunk-37-7.png" width="384" />
+
+``` python
+visualize_classification(model2, dataset.data, dataset.label)
+plt.show()
+```
+
+<img src="02-example_files/figure-markdown_github/unnamed-chunk-38-9.png" width="384" />
