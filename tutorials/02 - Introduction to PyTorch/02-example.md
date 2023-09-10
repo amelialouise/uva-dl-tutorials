@@ -74,7 +74,7 @@ end_time = time.time()
 print(f"CPU time: {(end_time - start_time):6.5f}s")
 ```
 
-    ## CPU time: 0.42782s
+    ## CPU time: 0.48866s
 
 ``` python
 ## GPU version
@@ -90,7 +90,7 @@ torch.cuda.synchronize() # waits for all to finish running on GPU
 print(f"GPU time: {0.001 * start.elapsed_time(end):6.5f}s")
 ```
 
-    ## GPU time: 0.05929s
+    ## GPU time: 0.05958s
 
 My GPU is about 5x faster. The difference in the tutorial was much more
 dramatic (orders of magnitude):
@@ -317,7 +317,7 @@ print("Size of dataset:", len(dataset))
 print("First element:", dataset[0])
 ```
 
-    ## First element: (tensor([ 1.1391, -0.0653]), tensor(1))
+    ## First element: (tensor([ 0.1118, -0.0284]), tensor(0))
 
 Nice. So we have a tensor of size \[200,2\] that we can use.
 
@@ -378,8 +378,6 @@ py$dataset$data$numpy() %>%
   )
 ```
 
-    ## Warning: Removed 1 rows containing missing values (`geom_point()`).
-
 ![](02-example_files/figure-markdown_github/unnamed-chunk-17-1.png)
 Beautiful.
 
@@ -437,21 +435,21 @@ print("Data inputs", data_inputs.shape, "\n", data_inputs)
 ```
 
     ## Data inputs torch.Size([8, 2]) 
-    ##  tensor([[ 1.0217,  1.0857],
-    ##         [-0.0711, -0.0207],
-    ##         [ 1.0261, -0.0934],
-    ##         [ 0.0490,  1.0261],
-    ##         [ 0.0405, -0.0756],
-    ##         [-0.0712,  1.0300],
-    ##         [ 0.0954,  1.1284],
-    ##         [-0.1150,  0.0467]])
+    ##  tensor([[ 2.5393e-03,  7.5564e-01],
+    ##         [-1.1605e-01, -9.3931e-02],
+    ##         [-5.2712e-02,  1.7494e-01],
+    ##         [ 6.2587e-02,  1.6343e-04],
+    ##         [ 2.0619e-01,  1.0436e+00],
+    ##         [ 1.0890e+00, -7.9746e-02],
+    ##         [ 8.5511e-02,  1.1378e+00],
+    ##         [ 3.6891e-02,  1.1293e-01]])
 
 ``` python
 print("Data labels", data_labels.shape, "\n", data_labels)
 ```
 
     ## Data labels torch.Size([8]) 
-    ##  tensor([0, 0, 1, 1, 0, 1, 1, 0])
+    ##  tensor([1, 0, 0, 0, 1, 1, 1, 0])
 
 Cool.
 
@@ -619,10 +617,10 @@ state_dict = model.state_dict()
 print(state_dict)
 ```
 
-    ## OrderedDict([('linear1.weight', tensor([[-2.2271,  3.1316],
-    ##         [ 3.2716, -2.4344],
-    ##         [-2.3553, -2.3066],
-    ##         [-0.5073, -0.9231]], device='cuda:0')), ('linear1.bias', tensor([0.8535, 0.9872, 0.5480, 1.0785], device='cuda:0')), ('linear2.weight', tensor([[-4.0489, -4.3152, -3.5065,  1.4636]], device='cuda:0')), ('linear2.bias', tensor([0.9264], device='cuda:0'))])
+    ## OrderedDict([('linear1.weight', tensor([[-1.2823, -1.6045],
+    ##         [ 2.1378, -2.5418],
+    ##         [ 2.3116,  2.1348],
+    ##         [-2.9721,  2.6486]], device='cuda:0')), ('linear1.bias', tensor([ 2.2569, -1.0068, -0.7683, -1.3263], device='cuda:0')), ('linear2.weight', tensor([[2.6174, 3.4856, 3.2963, 3.8317]], device='cuda:0')), ('linear2.bias', tensor([0.4753], device='cuda:0'))])
 
 Nice, this looks good. We’ll save this so that we can load these same
 weights when needed later.
@@ -655,10 +653,10 @@ print("Original model\n", model.state_dict())
 ```
 
     ## Original model
-    ##  OrderedDict([('linear1.weight', tensor([[-2.2271,  3.1316],
-    ##         [ 3.2716, -2.4344],
-    ##         [-2.3553, -2.3066],
-    ##         [-0.5073, -0.9231]], device='cuda:0')), ('linear1.bias', tensor([0.8535, 0.9872, 0.5480, 1.0785], device='cuda:0')), ('linear2.weight', tensor([[-4.0489, -4.3152, -3.5065,  1.4636]], device='cuda:0')), ('linear2.bias', tensor([0.9264], device='cuda:0'))])
+    ##  OrderedDict([('linear1.weight', tensor([[-1.2823, -1.6045],
+    ##         [ 2.1378, -2.5418],
+    ##         [ 2.3116,  2.1348],
+    ##         [-2.9721,  2.6486]], device='cuda:0')), ('linear1.bias', tensor([ 2.2569, -1.0068, -0.7683, -1.3263], device='cuda:0')), ('linear2.weight', tensor([[2.6174, 3.4856, 3.2963, 3.8317]], device='cuda:0')), ('linear2.bias', tensor([0.4753], device='cuda:0'))])
 
 ``` python
 print("\nLoaded model\n", new_model.state_dict())
@@ -666,10 +664,10 @@ print("\nLoaded model\n", new_model.state_dict())
 
     ## 
     ## Loaded model
-    ##  OrderedDict([('linear1.weight', tensor([[-2.2271,  3.1316],
-    ##         [ 3.2716, -2.4344],
-    ##         [-2.3553, -2.3066],
-    ##         [-0.5073, -0.9231]])), ('linear1.bias', tensor([0.8535, 0.9872, 0.5480, 1.0785])), ('linear2.weight', tensor([[-4.0489, -4.3152, -3.5065,  1.4636]])), ('linear2.bias', tensor([0.9264]))])
+    ##  OrderedDict([('linear1.weight', tensor([[-1.2823, -1.6045],
+    ##         [ 2.1378, -2.5418],
+    ##         [ 2.3116,  2.1348],
+    ##         [-2.9721,  2.6486]])), ('linear1.bias', tensor([ 2.2569, -1.0068, -0.7683, -1.3263])), ('linear2.weight', tensor([[2.6174, 3.4856, 3.2963, 3.8317]])), ('linear2.bias', tensor([0.4753]))])
 
 Neat. Apparently when we load the state dict we also get back this nice
 *All keys matched successfully* message in the console.
