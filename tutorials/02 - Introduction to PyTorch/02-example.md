@@ -822,8 +822,6 @@ train_model(model2, optimizer, train_data_loader, loss_module)
 eval_model(model2, test_data_loader)
 ```
 
-<img src="02-example_files/figure-markdown_github/unnamed-chunk-35-3.png" width="384" />
-
 ``` python
 visualize_classification(model2, dataset.data, dataset.label)
 plt.show()
@@ -851,8 +849,6 @@ train_model(model2, optimizer, train_data_loader, loss_module)
 # evaluate
 eval_model(model2, test_data_loader)
 ```
-
-<img src="02-example_files/figure-markdown_github/unnamed-chunk-37-7.png" width="384" />
 
 ``` python
 visualize_classification(model2, dataset.data, dataset.label)
