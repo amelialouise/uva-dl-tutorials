@@ -1,0 +1,249 @@
+---
+output:
+  md_document:
+    variant: markdown_github
+---
+
+Continuing with UvA's [Tutorial 3](https://uvadlc-notebooks.readthedocs.io/en/latest/tutorial_notebooks/tutorial3/Activation_Functions.html), covering GPU/CPU support and an example. 
+
+```{r setup, include = FALSE}
+library(here)
+library(reticulate)
+library(dplyr)
+```
+
+
+```{python}
+## Standard libraries
+import os
+import json
+import math
+import numpy as np
+
+## Imports for plotting
+import matplotlib.pyplot as plt
+import matplotlib_inline as inline
+inline.backend_inline.set_matplotlib_formats('svg', 'pdf') # For export
+import seaborn as sns
+sns.set()
+
+## Progress bar
+from tqdm.notebook import tqdm
+
+## PyTorch
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.utils.data as data
+import torch.optim as optim
+```
+
+For reproducibility, we'll set a seed on all libraries that will potentially be used in this tutorial. 
+
+>  The dataset path is the directory where we will download datasets used in the notebooks. It is recommended to store all datasets from PyTorch in one joined directory to prevent duplicate downloads. The checkpoint path is the directory where we will store trained model weights and additional files.
+
+```{python}
+MAIN_PATH = "C:/stats/uva-dl-tutorials/"
+# Path to the folder where the datasets are/should be downloaded (e.g. MNIST)
+DATASET_PATH = os.path.join(MAIN_PATH, r'data')
+# Path to the folder where the pretrained models are saved
+CHECKPOINT_PATH = os.path.join(MAIN_PATH, r'saved_models/tut3')
+
+# Function for setting the seed
+def set_seed(seed):
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available(): # GPU operation have separate seed
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+set_seed(42)
+
+# Additionally, some operations on a GPU are implemented stochastic for efficiency
+# We want to ensure that all operations are deterministic on GPU (if used) for reproducibility
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
+
+# Fetching the device that will be used throughout this notebook
+device = torch.device("cpu") if not torch.cuda.is_available() else torch.device("cuda:0")
+print("Using device", device)
+```
+
+Next we'll download the models from the tutorial. 
+
+```{python}
+import urllib.request
+from urllib.error import HTTPError
+# Github URL where saved models are stored for this tutorial
+base_url = "https://raw.githubusercontent.com/phlippe/saved_models/main/tutorial3/"
+# Files to download
+pretrained_files = ["FashionMNIST_elu.config", "FashionMNIST_elu.tar",
+                    "FashionMNIST_leakyrelu.config", "FashionMNIST_leakyrelu.tar",
+                    "FashionMNIST_relu.config", "FashionMNIST_relu.tar",
+                    "FashionMNIST_sigmoid.config", "FashionMNIST_sigmoid.tar",
+                    "FashionMNIST_swish.config", "FashionMNIST_swish.tar",
+                    "FashionMNIST_tanh.config", "FashionMNIST_tanh.tar"]
+# Create checkpoint path if it doesn't exist yet
+os.makedirs(CHECKPOINT_PATH, exist_ok=True)
+
+# For each file, check whether it already exists. If not, try downloading it.
+for file_name in pretrained_files:
+    file_path = os.path.join(CHECKPOINT_PATH, file_name)
+    if not os.path.isfile(file_path):
+        file_url = base_url + file_name
+        print(f"Downloading {file_url}...")
+        try:
+            urllib.request.urlretrieve(file_url, file_path)
+        except HTTPError as e:
+            print("Something went wrong. Please try to download the file from the GDrive folder, or contact the author with the full output including the following error:\n", e)
+```
+
+
+Download was a success. 
+
+# Common activation functions
+
+We'll implement some common AFs using a base `nn.Module`. Note that in PyTorch, the `nn.Module` uses a `forward` method to allow the module to be callable. Search for *def _call_impl* in the [docs here](https://pytorch.org/docs/stable/_modules/torch/nn/modules/module.html#Module)
+
+
+>Every activation function will be an `nn.Module` so that we can integrate them nicely in a network. We will use the `config` dictionary to store adjustable parameters for some activation functions.
+
+
+Two of the "oldest" activation functions that are still commonly used are sigmoid and tanh, so we'll implement those first. 
+
+```{python}
+# Base class that all modules inherit
+class ActivationFunction(nn.Module):
+  
+  def __init__(self):
+    super().__init__()
+    self.name = self.__class__.__name__
+    self.config = {"name": self.name}
+
+##############################
+class Sigmoid(ActivationFunction):
+  
+  def forward(self, x):
+    return 1 / (1 + torch.exp(-x))
+  
+##############################
+class Tanh(ActivationFunction): 
+  
+  def forward(self, x):
+    x_exp, neg_x_exp = torch.exp(x), torch.exp(-x)
+    return (x_exp - neg_x_exp) / (x_exp + neg_x_exp)
+##############################
+```
+
+Other common ones include the following based on the Rectified Linear Unit (ReLU): 
+
+- LeakyReLU: allows for a smaller slope (instead of zero) for negative values  
+
+- ELU: Exponential decay for negative values
+
+- Swish: a smooth and non-monotonic function that has been shown to prevent dead neurons. Paper on it [here](https://arxiv.org/abs/1710.05941)
+
+```{python}
+##############################
+
+class ReLU(ActivationFunction):
+
+    def forward(self, x):
+        return x * (x > 0).float()
+
+##############################
+
+class LeakyReLU(ActivationFunction):
+
+    def __init__(self, alpha=0.1):
+        super().__init__()
+        self.config["alpha"] = alpha
+
+    def forward(self, x):
+        return torch.where(x > 0, x, self.config["alpha"] * x)
+
+##############################
+
+class ELU(ActivationFunction):
+
+    def forward(self, x):
+        return torch.where(x > 0, x, torch.exp(x)-1)
+
+##############################
+
+class Swish(ActivationFunction):
+
+    def forward(self, x):
+        return x * torch.sigmoid(x)
+
+##############################
+```
+
+
+We'll toss these activation functions into a dictionary so that the name is mapped to the class object.
+
+```{python}
+act_fn_by_name = {
+    "sigmoid": Sigmoid,
+    "tanh": Tanh,
+    "relu": ReLU,
+    "leakyrelu": LeakyReLU,
+    "elu": ELU,
+    "swish": Swish
+}
+```
+
+
+# Visualizing activation functions
+
+We use the `backward` function in PyTorch to compute gradients. 
+
+```{python}
+def get_grads(act_fn, x):
+    """
+    Computes the gradients of an activation function at specified positions.
+
+    Inputs:
+        act_fn - An object of the class "ActivationFunction" with an implemented forward pass.
+        x - 1D input tensor.
+    Output:
+        A tensor with the same size of x containing the gradients of act_fn at x.
+    """
+    x = x.clone().requires_grad_() # Mark the input as tensor for which we want to store gradients
+    out = act_fn(x)
+    out.sum().backward() # Summing results in an equal gradient flow to each element in x
+    return x.grad # Accessing the gradients of x by "x.grad"
+```
+
+Then create a visual for our activation functions along with their gradients. 
+
+```{python}
+#| fig.width: 6
+#| fig.height: 7.5
+
+def vis_act_fn(act_fn, ax, x):
+    # Run activation function
+    y = act_fn(x)
+    y_grads = get_grads(act_fn, x)
+    # Push x, y and gradients back to cpu for plotting
+    x, y, y_grads = x.cpu().numpy(), y.cpu().numpy(), y_grads.cpu().numpy()
+    ## Plotting
+    ax.plot(x, y, linewidth=2, label="ActFn")
+    ax.plot(x, y_grads, linewidth=2, label="Gradient")
+    ax.set_title(act_fn.name)
+    ax.legend()
+    ax.set_ylim(-2, 3)
+
+# Add activation functions if wanted
+act_fns = [act_fn() for act_fn in act_fn_by_name.values()]
+x = torch.linspace(-3, 3, 1000) # Range on which we want to visualize the activation functions
+
+## Plotting
+rows = math.ceil(len(act_fns)/2.0)
+fig, ax = plt.subplots(rows, 2)
+for i, act_fn in enumerate(act_fns):
+    vis_act_fn(act_fn, ax[divmod(i,2)], x)
+fig.subplots_adjust(hspace = .35, wspace = 0.3)
+plt.show()
+plt.close()
+```
+
