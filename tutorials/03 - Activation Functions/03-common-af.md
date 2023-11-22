@@ -1,19 +1,8 @@
----
-output:
-  md_document:
-    variant: gfm
----
+Continuing with UvA’s [Tutorial
+3](https://uvadlc-notebooks.readthedocs.io/en/latest/tutorial_notebooks/tutorial3/Activation_Functions.html),
+covering common activation functions.
 
-Continuing with UvA's [Tutorial 3](https://uvadlc-notebooks.readthedocs.io/en/latest/tutorial_notebooks/tutorial3/Activation_Functions.html), covering common activation functions.  
-
-```{r setup, include = FALSE}
-library(here)
-library(reticulate)
-library(dplyr)
-```
-
-
-```{python}
+``` python
 ## Standard libraries
 import os
 import json
@@ -38,11 +27,16 @@ import torch.utils.data as data
 import torch.optim as optim
 ```
 
-For reproducibility, we'll set a seed on all libraries that will potentially be used in this tutorial. 
+For reproducibility, we’ll set a seed on all libraries that will
+potentially be used in this tutorial.
 
->  The dataset path is the directory where we will download datasets used in the notebooks. It is recommended to store all datasets from PyTorch in one joined directory to prevent duplicate downloads. The checkpoint path is the directory where we will store trained model weights and additional files.
+> The dataset path is the directory where we will download datasets used
+> in the notebooks. It is recommended to store all datasets from PyTorch
+> in one joined directory to prevent duplicate downloads. The checkpoint
+> path is the directory where we will store trained model weights and
+> additional files.
 
-```{python}
+``` python
 import os
 import numpy as np
 
@@ -71,9 +65,11 @@ device = torch.device("cpu") if not torch.cuda.is_available() else torch.device(
 print("Using device", device)
 ```
 
-Next we'll download the models from the tutorial. 
+    ## Using device cuda:0
 
-```{python}
+Next we’ll download the models from the tutorial.
+
+``` python
 import urllib.request
 from urllib.error import HTTPError
 # Github URL where saved models are stored for this tutorial
@@ -100,20 +96,24 @@ for file_name in pretrained_files:
             print("Something went wrong. Please try to download the file from the GDrive folder, or contact the author with the full output including the following error:\n", e)
 ```
 
-
-Download was a success. 
+Download was a success.
 
 # Common activation functions
 
-We'll implement some common AFs using a base `nn.Module`. Note that in PyTorch, the `nn.Module` uses a `forward` method to allow the module to be callable. Search for *def _call_impl* in the [docs here](https://pytorch.org/docs/stable/_modules/torch/nn/modules/module.html#Module)
+We’ll implement some common AFs using a base `nn.Module`. Note that in
+PyTorch, the `nn.Module` uses a `forward` method to allow the module to
+be callable. Search for \*def \_call_impl\* in the [docs
+here](https://pytorch.org/docs/stable/_modules/torch/nn/modules/module.html#Module)
 
+> Every activation function will be an `nn.Module` so that we can
+> integrate them nicely in a network. We will use the `config`
+> dictionary to store adjustable parameters for some activation
+> functions.
 
->Every activation function will be an `nn.Module` so that we can integrate them nicely in a network. We will use the `config` dictionary to store adjustable parameters for some activation functions.
+Two of the “oldest” activation functions that are still commonly used
+are sigmoid and tanh, so we’ll implement those first.
 
-
-Two of the "oldest" activation functions that are still commonly used are sigmoid and tanh, so we'll implement those first. 
-
-```{python}
+``` python
 # Base class that all modules inherit
 class ActivationFunction(nn.Module):
   
@@ -137,15 +137,19 @@ class Tanh(ActivationFunction):
 ##############################
 ```
 
-Other common ones include the following based on the Rectified Linear Unit (ReLU): 
+Other common ones include the following based on the Rectified Linear
+Unit (ReLU):
 
-- LeakyReLU: allows for a smaller slope (instead of zero) for negative values  
+- LeakyReLU: allows for a smaller slope (instead of zero) for negative
+  values
 
 - ELU: Exponential decay for negative values
 
-- Swish: a smooth and non-monotonic function that has been shown to prevent dead neurons. Paper on it [here](https://arxiv.org/abs/1710.05941)
+- Swish: a smooth and non-monotonic function that has been shown to
+  prevent dead neurons. Paper on it
+  [here](https://arxiv.org/abs/1710.05941)
 
-```{python}
+``` python
 ##############################
 
 class ReLU(ActivationFunction):
@@ -181,10 +185,10 @@ class Swish(ActivationFunction):
 ##############################
 ```
 
+We’ll toss these activation functions into a dictionary so that the name
+is mapped to the class object.
 
-We'll toss these activation functions into a dictionary so that the name is mapped to the class object.
-
-```{python}
+``` python
 act_fn_by_name = {
     "sigmoid": Sigmoid,
     "tanh": Tanh,
@@ -195,12 +199,11 @@ act_fn_by_name = {
 }
 ```
 
-
 # Visualizing activation functions
 
-We use the `backward` function in PyTorch to compute gradients. 
+We use the `backward` function in PyTorch to compute gradients.
 
-```{python}
+``` python
 def get_grads(act_fn, x):
     """
     Computes the gradients of an activation function at specified positions.
@@ -217,12 +220,10 @@ def get_grads(act_fn, x):
     return x.grad # Accessing the gradients of x by "x.grad"
 ```
 
-Then create a visual for our activation functions along with their gradients. 
+Then create a visual for our activation functions along with their
+gradients.
 
-```{python}
-#| fig.width: 6
-#| fig.height: 7.5
-
+``` python
 import math
 import matplotlib.pyplot as plt
 
@@ -250,6 +251,10 @@ for i, act_fn in enumerate(act_fns):
     vis_act_fn(act_fn, ax[divmod(i,2)], x)
 fig.subplots_adjust(hspace = .35, wspace = 0.3)
 plt.show()
-plt.close()
 ```
 
+<img src="03-common-af_files/figure-gfm/unnamed-chunk-8-1.png" width="672" />
+
+``` python
+plt.close()
+```

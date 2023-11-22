@@ -1,0 +1,45 @@
+---
+output:
+  md_document:
+    variant: gfm
+---
+
+# Analysing the effect of activation functions
+
+Continuing with UvA's [Tutorial 3](https://uvadlc-notebooks.readthedocs.io/en/latest/tutorial_notebooks/tutorial3/Activation_Functions.html#Analysing-the-effect-of-activation-functions) on Analysing the effect of AFs. 
+
+```{r setup, include = FALSE}
+library(here)
+library(reticulate)
+library(dplyr)
+```
+
+We will use a simple neural network training on *[FashionMNIST](https://github.com/zalandoresearch/fashion-mnist)* to see the effect of activation functions. 
+
+## Setup neural network
+
+This network will view images as 1D tensors and push them through a sequence of linear layers and specified activation function. 
+
+```{python}
+class BaseNetwork(nn.Module):
+  
+  def __init__(self, act_fn, input_size = 784, num_classes = 10, hidden_sizes = [512, 256, 256, 128]): 
+    """
+    Inputs: 
+      act_fn - Object of the activation function that should be used as non-linearity in the network. 
+      input_size - Size of the input imagines in pixels
+      num_classes - Number of classes we want to predict
+      hidden_sizes - A list of integers specifying the hidden layer sizes in the NN
+    """
+    super().__init__()
+    
+    # Create the network based on the specified hidden sizes
+    layers = []
+    layer_sizes = [input_size] + hidden_sizes
+    for layer_index in range(1, len(layer_sizes)):
+      layers += [nn.Linear(layer_sizes[layer_index - 1], layer_sizes[layer_index]),
+                 act_fn]
+
+
+```
+
