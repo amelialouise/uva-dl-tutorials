@@ -38,11 +38,7 @@ Possibly related open issue
 In Tutorial 3 we started to render some figures that contained multiple
 graphs, e.g.
 
-<figure>
-<embed
-src="https://uvadlc-notebooks.readthedocs.io/en/latest/tutorial_notebooks/tutorial3/Activation_Functions.html#Visualizing-the-gradient-flow-after-initialization" />
-<figcaption aria-hidden="true">(images/tut3-visual.PNG)</figcaption>
-</figure>
+[![](images/tut3-visual.PNG)](https://uvadlc-notebooks.readthedocs.io/en/latest/tutorial_notebooks/tutorial3/Activation_Functions.html#Visualizing-the-gradient-flow-after-initialization)
 
 These often did not render well in an R notebook chunk by default.
 Here’s that same set of graphs below, for instance.
@@ -74,6 +70,6 @@ you’re just magical.
 
 Here’s my combo for reference.
 
-![(images/version-info.PNG)](https://community.rstudio.com/t/rstudio-version-not-found-on-knit/8088/3)
+[![](images/version-info.PNG)](https://community.rstudio.com/t/rstudio-version-not-found-on-knit/8088/3)
 *This is an image because knitr can't render if you use
 RStudio.Version()*

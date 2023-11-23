@@ -28,7 +28,7 @@ Possibly related open issue [here](https://github.com/rstudio/reticulate/issues/
 
 In Tutorial 3 we started to render some figures that contained multiple graphs, e.g.
 
-![(images/tut3-visual.PNG)](https://uvadlc-notebooks.readthedocs.io/en/latest/tutorial_notebooks/tutorial3/Activation_Functions.html#Visualizing-the-gradient-flow-after-initialization)
+[![](images/tut3-visual.PNG)](https://uvadlc-notebooks.readthedocs.io/en/latest/tutorial_notebooks/tutorial3/Activation_Functions.html#Visualizing-the-gradient-flow-after-initialization)
 
 These often did not render well in an R notebook chunk by default. Here's that same set of graphs below, for instance.
 
@@ -51,5 +51,5 @@ cat("RStudio", RStudio.Version()$mode, "\n")
 cat("Version", RStudio.Version()$long_version, "--", paste0("\"", RStudio.Version()$release_name, "\""))
 ```
 
-![(images/version-info.PNG)](https://community.rstudio.com/t/rstudio-version-not-found-on-knit/8088/3)
+[![](images/version-info.PNG)](https://community.rstudio.com/t/rstudio-version-not-found-on-knit/8088/3)
 *This is an image because knitr can\'t render if you use RStudio.Version()*
