@@ -71,5 +71,6 @@ you’re just magical.
 Here’s my combo for reference.
 
 [![](images/version-info.PNG)](https://community.rstudio.com/t/rstudio-version-not-found-on-knit/8088/3)
+
 *This is an image because knitr can't render if you use
 RStudio.Version()*
