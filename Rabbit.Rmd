@@ -18,7 +18,7 @@ I ran into another weird issue in Tutorial 3 where attempting to `Knit` the docu
 
 This was pretty annoying but fortunately there is a workaround for this: render using `rmarkdown::render` in the R console instead.
 
-![(images/render-using-console.PNG)](https://github.com/rstudio/reticulate/issues/863#issuecomment-1096556772)
+[![](images/render-using-console.PNG)](https://github.com/rstudio/reticulate/issues/863#issuecomment-1096556772)
 
 Why did knitting become an issue in Tutorial 3? Maybe a bug was introduced when I changed the `variant` of the `md_document` in the YAML header to `gfm`, which the Console had shouted at me to do since `markdown_github` is  [deprecated](https://github.com/r-lib/pkgdown/pull/1473). I tried changing this back to `markdown_github` and using the knit gui, but that had the same outcome where it would quit. Anyway, just use the console if you run into this weird bug. 
 

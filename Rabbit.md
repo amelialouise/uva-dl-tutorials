@@ -19,13 +19,7 @@ simply quit with an error message about being unable to find the first
 This was pretty annoying but fortunately there is a workaround for this:
 render using `rmarkdown::render` in the R console instead.
 
-<figure>
-<img
-src="https://github.com/rstudio/reticulate/issues/863#issuecomment-1096556772"
-alt="(images/render-using-console.PNG)" />
-<figcaption
-aria-hidden="true">(images/render-using-console.PNG)</figcaption>
-</figure>
+[![](images/render-using-console.PNG)](https://github.com/rstudio/reticulate/issues/863#issuecomment-1096556772)
 
 Why did knitting become an issue in Tutorial 3? Maybe a bug was
 introduced when I changed the `variant` of the `md_document` in the YAML
