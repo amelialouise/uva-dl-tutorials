@@ -5,6 +5,41 @@ scurrying down some rabbit holes anytime something doesn’t work or
 “works” in an unexpected way. So this notebook will document references
 and thingamabobs that helped me to escape them for a bit.
 
+# Knitting to Github Markdown (gfm)
+
+<figure>
+<img src="images/knit-gui.PNG" alt="Knit gui" />
+<figcaption aria-hidden="true">Knit gui</figcaption>
+</figure>
+
+I ran into another weird issue in Tutorial 3 where attempting to `Knit`
+the document using the usual gui in RStudio no longer worked. It would
+simply quit with an error message about being unable to find the first
+`Python` package I had imported in the first `Python` chunk.
+
+<figure>
+<img src="images/render-using-knit-gui.PNG" alt="Knit is a quitter" />
+<figcaption aria-hidden="true">Knit is a quitter</figcaption>
+</figure>
+
+This was pretty annoying but fortunately there is a workaround for this:
+render using `rmarkdown::render` in the R console instead.
+
+[![Console to the
+rescue](images/render-using-console.PNG)](https://github.com/rstudio/reticulate/issues/863#issuecomment-1096556772)
+
+Why did knitting become an issue in Tutorial 3? Maybe a bug was
+introduced when I changed the `variant` of the `md_document` in the YAML
+header to `gfm`, which the Console had shouted at me to do since
+`markdown_github` is
+[deprecated](https://github.com/r-lib/pkgdown/pull/1473). I tried
+changing this back to `markdown_github` and using the knit gui, but that
+had the same outcome where it would quit. Anyway, just use the console
+if you run into this weird bug.
+
+Possibly related open issue
+[here](https://github.com/rstudio/reticulate/issues/863).
+
 # Rendering figures in RStudio
 
 In Tutorial 3 we started to render some figures that contained multiple

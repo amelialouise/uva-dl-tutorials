@@ -1,21 +1,10 @@
----
-output:
-  md_document:
-    variant: gfm
----
-
 # Analysing the effect of activation functions
 
-Continuing with UvA's [Tutorial 3](https://uvadlc-notebooks.readthedocs.io/en/latest/tutorial_notebooks/tutorial3/Activation_Functions.html#Analysing-the-effect-of-activation-functions) on Analysing the effect of AFs. 
+Continuing with UvA’s [Tutorial
+3](https://uvadlc-notebooks.readthedocs.io/en/latest/tutorial_notebooks/tutorial3/Activation_Functions.html#Analysing-the-effect-of-activation-functions)
+on Analysing the effect of AFs.
 
-
-```{r setup, include = FALSE}
-library(here)
-library(reticulate)
-library(dplyr)
-```
-
-```{python}
+``` python
 ## Standard libraries
 import os
 import json
@@ -64,7 +53,9 @@ device = torch.device("cpu") if not torch.cuda.is_available() else torch.device(
 print("Using device", device)
 ```
 
-```{python act-fns}
+    ## Using device cuda:0
+
+``` python
 # Base class that all modules inherit
 class ActivationFunction(nn.Module):
   
@@ -126,17 +117,18 @@ act_fn_by_name = {
 }
 ```
 
-
-We will use a simple neural network training on *[FashionMNIST](https://github.com/zalandoresearch/fashion-mnist)* to see the effect of activation functions. 
+We will use a simple neural network training on
+*[FashionMNIST](https://github.com/zalandoresearch/fashion-mnist)* to
+see the effect of activation functions.
 
 ## Setup neural network
 
-This network will view images as 1D tensors and push them through a sequence of linear layers and specified activation function. 
+This network will view images as 1D tensors and push them through a
+sequence of linear layers and specified activation function.
 
-784 pixels, 10 classifications, 1 input + 4 linear layers 
+784 pixels, 10 classifications, 1 input + 4 linear layers
 
-
-```{python}
+``` python
 class BaseNetwork(nn.Module):
   
   def __init__(self, act_fn, input_size = 784, num_classes = 10, hidden_sizes = [512, 256, 256, 128]): 
@@ -165,12 +157,12 @@ class BaseNetwork(nn.Module):
     x = x.view(x.size(0), -1) # Reshape images to a flat vector
     out = self.layers(x)
     return out
-
 ```
 
-> We also add functions for loading and saving the model. The hyperparameters are stored in a configuration file (simple json file):
+> We also add functions for loading and saving the model. The
+> hyperparameters are stored in a configuration file (simple json file):
 
-```{python}
+``` python
 def _get_config_file(model_path, model_name):
     # Name of the file for storing hyperparameter details
     return os.path.join(model_path, model_name + ".config")
@@ -217,14 +209,15 @@ def save_model(model, model_path, model_name):
     torch.save(model.state_dict(), model_file)
 ```
 
-
 # Loading FashionMNIST
 
-> FashionMNIST is a more complex version of MNIST and contains black-and-white images of clothes instead of digits. The 10 classes include trousers, coats, shoes, bags and more. 
+> FashionMNIST is a more complex version of MNIST and contains
+> black-and-white images of clothes instead of digits. The 10 classes
+> include trousers, coats, shoes, bags and more.
 
-We'll make use of the `torchvision` package to load the dataset. 
+We’ll make use of the `torchvision` package to load the dataset.
 
-```{python}
+``` python
 import torchvision
 from torchvision.datasets import FashionMNIST
 from torchvision import transforms
@@ -248,31 +241,58 @@ val_loader = data.DataLoader(val_set, batch_size=1024, shuffle=False, drop_last=
 test_loader = data.DataLoader(test_set, batch_size=1024, shuffle=False, drop_last=False)
 ```
 
-This looks like it worked! Let's see if we can visualize some images. 
+This looks like it worked! Let’s see if we can visualize some images.
 
-```{python}
+``` python
 exmp_imgs = [train_set[i][0] for i in range(16)]
 # Organize the images into a grid for nicer visualization
 img_grid = torchvision.utils.make_grid(torch.stack(exmp_imgs, dim=0), nrow=4, normalize=True, pad_value=0.5)
 img_grid = img_grid.permute(1, 2, 0)
 
 plt.figure(figsize=(8,8))
+```
+
+    ## <Figure size 800x800 with 0 Axes>
+
+``` python
 plt.title("FashionMNIST examples")
+```
+
+    ## Text(0.5, 1.0, 'FashionMNIST examples')
+
+``` python
 plt.imshow(img_grid)
+```
+
+    ## <matplotlib.image.AxesImage object at 0x000001E4CED19F10>
+
+``` python
 plt.axis('off')
+```
+
+    ## (-0.5, 121.5, 121.5, -0.5)
+
+``` python
 plt.show()
+```
+
+<img src="03-effect-of-af_files/figure-gfm/unnamed-chunk-5-1.png" width="768" />
+
+``` python
 plt.close()
 ```
 
-Neat. Onward to... 
+Neat. Onward to…
 
 # Visualizing the gradient flow after initialization
 
-We'll now take a look at how activation functions propagate gradients through this 'freshly initialized network' and measure the gradients for a batch of 256 images.  
+We’ll now take a look at how activation functions propagate gradients
+through this ‘freshly initialized network’ and measure the gradients for
+a batch of 256 images.
 
-First define the function to perform these steps. 
+First define the function to perform these steps.
 
-```{python}
+``` python
 def visualize_gradients(net, color="C0"):
     """
     Inputs:
@@ -309,11 +329,7 @@ def visualize_gradients(net, color="C0"):
     plt.close()
 ```
 
-
-```{python}
-#| fig.width: 15
-#| fig.height: 5
-
+``` python
 # Seaborn prints warnings if histogram has small values. We can ignore them for now
 import warnings
 warnings.filterwarnings('ignore')
@@ -323,6 +339,6 @@ for i, act_fn_name in enumerate(act_fn_by_name):
     act_fn = act_fn_by_name[act_fn_name]()
     net_actfn = BaseNetwork(act_fn=act_fn).to(device)
     visualize_gradients(net_actfn, color=f"C{i}")
-
 ```
-  
+
+<img src="03-effect-of-af_files/figure-gfm/unnamed-chunk-7-3.png" width="1680" /><img src="03-effect-of-af_files/figure-gfm/unnamed-chunk-7-4.png" width="1680" /><img src="03-effect-of-af_files/figure-gfm/unnamed-chunk-7-5.png" width="1680" /><img src="03-effect-of-af_files/figure-gfm/unnamed-chunk-7-6.png" width="1680" /><img src="03-effect-of-af_files/figure-gfm/unnamed-chunk-7-7.png" width="1680" /><img src="03-effect-of-af_files/figure-gfm/unnamed-chunk-7-8.png" width="1680" />
