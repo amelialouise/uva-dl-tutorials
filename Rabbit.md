@@ -7,26 +7,25 @@ and thingamabobs that helped me to escape them for a bit.
 
 # Knitting to Github Markdown (gfm)
 
-<figure>
-<img src="images/knit-gui.PNG" alt="Knit gui" />
-<figcaption aria-hidden="true">Knit gui</figcaption>
-</figure>
+![](images/knit-gui.PNG)
 
 I ran into another weird issue in Tutorial 3 where attempting to `Knit`
 the document using the usual gui in RStudio no longer worked. It would
 simply quit with an error message about being unable to find the first
 `Python` package I had imported in the first `Python` chunk.
 
-<figure>
-<img src="images/render-using-knit-gui.PNG" alt="Knit is a quitter" />
-<figcaption aria-hidden="true">Knit is a quitter</figcaption>
-</figure>
+![](images/render-using-knit-gui.PNG)
 
 This was pretty annoying but fortunately there is a workaround for this:
 render using `rmarkdown::render` in the R console instead.
 
-[![Console to the
-rescue](images/render-using-console.PNG)](https://github.com/rstudio/reticulate/issues/863#issuecomment-1096556772)
+<figure>
+<img
+src="https://github.com/rstudio/reticulate/issues/863#issuecomment-1096556772"
+alt="(images/render-using-console.PNG)" />
+<figcaption
+aria-hidden="true">(images/render-using-console.PNG)</figcaption>
+</figure>
 
 Why did knitting become an issue in Tutorial 3? Maybe a bug was
 introduced when I changed the `variant` of the `md_document` in the YAML
@@ -45,15 +44,16 @@ Possibly related open issue
 In Tutorial 3 we started to render some figures that contained multiple
 graphs, e.g.
 
-[![Wowzers.](images/tut3-visual.PNG)](https://uvadlc-notebooks.readthedocs.io/en/latest/tutorial_notebooks/tutorial3/Activation_Functions.html#Visualizing-the-gradient-flow-after-initialization)
+<figure>
+<embed
+src="https://uvadlc-notebooks.readthedocs.io/en/latest/tutorial_notebooks/tutorial3/Activation_Functions.html#Visualizing-the-gradient-flow-after-initialization" />
+<figcaption aria-hidden="true">(images/tut3-visual.PNG)</figcaption>
+</figure>
 
 These often did not render well in an R notebook chunk by default.
 Here’s that same set of graphs below, for instance.
 
-<figure>
-<img src="images/tut3-visual-rchunk-bad.PNG" alt="No bueno" />
-<figcaption aria-hidden="true">No bueno</figcaption>
-</figure>
+![](images/tut3-visual-rchunk-bad.PNG)
 
 I learned in a `{reticulate}` [issue
 thread](https://github.com/rstudio/reticulate/issues/1140#issuecomment-1625607199)
@@ -61,10 +61,10 @@ that you can modify the figure size in a `Python` chunk by using
 `fig.width` and `fig.height` inline, as shown below. I thought that was
 kinda neat.
 
-![That's better.](images/tut3-visual-rchunk-better.PNG)It was possible
-for me to then move on with ~~my life~~ the tutorials after fiddling
-with these options to get a decent-looking-enough figure rendered in the
-R notebook. Huzzah!
+![](images/tut3-visual-rchunk-better.PNG)It was possible for me to then
+move on with ~~my life~~ the tutorials after fiddling with these options
+to get a decent-looking-enough figure rendered in the R notebook.
+Huzzah!
 
 That was until I knitted the notebook and discovered that the fiddling
 did not carry over. 😖 This issue is well-documented in this [closed and
@@ -80,5 +80,6 @@ you’re just magical.
 
 Here’s my combo for reference.
 
-[![This is an image because knitr can't render if you use
-RStudio.Version()](images/version-info.PNG)](https://community.rstudio.com/t/rstudio-version-not-found-on-knit/8088/3)
+![(images/version-info.PNG)](https://community.rstudio.com/t/rstudio-version-not-found-on-knit/8088/3)
+*This is an image because knitr can't render if you use
+RStudio.Version()*
